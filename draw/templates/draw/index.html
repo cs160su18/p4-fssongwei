@@ -19,18 +19,49 @@
     <canvas id="myCanvas" width="750px" height="750px"></canvas>
 </body>
 <script>
+    var socket = new WebSocket('ws://0.0.0.0:8765/');
+
+    socket.onopen = function(evt) { 
+        //socket.send("Hello WebSockets!");
+    }
 
     // setting up the canvas and one paper tool
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
     var tool = new paper.Tool();
 
+    var myPath;
+    var newPath = new paper.Path();
+    newPath.strokeColor = 'black';
+
+    tool.onMouseDown = function (event) {
+        myPath = new paper.Path();
+        myPath.strokeColor = 'black';
+    }
+
+    tool.onMouseDrag = function (event) {
+        myPath.add(event.point);
+        var msg = event.point.x + " " + event.point.y;
+        console.log("original point:" + msg);
+        socket.send(msg);
+    }
+
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
 
-    // var socket = new WebSocket(
-    //     'ws://your url here:8765/');
+    socket.onmessage = function (receivedMessage)
+    {
+        var msg = receivedMessage.data.split(' ');
+        var point = new paper.Point();
+        point.x = msg[0]-1;
+        point.y = msg[1]-1;
+        console.log(point);
+        
+        newPath.add(point);
+    }
 
+
+    socket.onclose = function(e) {alert("closed");}
 
 </script>
 </html>
